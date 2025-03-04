@@ -166,4 +166,17 @@ cython_debug/
 *.pickle
 
 # project environment
-env_recsys_start/
+env_sprint4
+
+# datasets and models
+als_model.joblib
+als_recommendations.pkl
+candidates_for_train.parquet
+candidates_to_rank.parquet
+catalog_names.parquet
+events.par
+interactions.parquet
+item_encoder.joblib
+items.par
+tracks.parquet
+user_encoder.joblib
