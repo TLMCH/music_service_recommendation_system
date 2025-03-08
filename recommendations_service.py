@@ -4,11 +4,23 @@ import requests
 from recommendations import Recommendations
 from fastapi import FastAPI
 from contextlib import asynccontextmanager 
+import configurations
 
 logger = logging.getLogger("uvicorn.error")
 rec_store = Recommendations()
-features_store_url = "http://127.0.0.1:8010"
-events_store_url = "http://127.0.0.1:8020"
+features_store_url = configurations.features_store_url
+events_store_url = configurations.events_store_url
+
+
+def dedup_ids(ids):
+    """
+    Дедублицирует список идентификаторов, оставляя только первое вхождение
+    """
+    seen = set()
+    ids = [id for id in ids if not (id in seen or seen.add(id))]
+
+    return ids
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -53,16 +65,6 @@ async def recommendations_offline(user_id: int, k: int = 5):
     return {"recs": recs}
 
 
-def dedup_ids(ids):
-    """
-    Дедублицирует список идентификаторов, оставляя только первое вхождение
-    """
-    seen = set()
-    ids = [id for id in ids if not (id in seen or seen.add(id))]
-
-    return ids
-
-
 @app.post("/recommendations_online")
 async def recommendations_online(user_id: int, k: int = 5):
     """
@@ -72,7 +74,7 @@ async def recommendations_online(user_id: int, k: int = 5):
     headers = {"Content-type": "application/json", "Accept": "text/plain"}
 
     # получаем список последних событий пользователя, возьмём три последних
-    params = {"user_id": user_id, "k": 5}
+    params = {"user_id": user_id, "k": k}
     resp = requests.post(events_store_url + "/get", headers=headers, params=params)
     events = resp.json()
     events = events["events"]
@@ -82,10 +84,10 @@ async def recommendations_online(user_id: int, k: int = 5):
     scores = []
     for item_id in events:
         # для каждого item_id получаем список похожих в similar_items
-        params = {"track_id": item_id, "k": 5}
+        params = {"track_id": item_id, "k": k}
         resp_similar = requests.post(features_store_url + "/similar_items", headers=headers, params=params)
         item_similar_items = resp_similar.json()
-        items += item_similar_items["track_id_2"]
+        items += item_similar_items["track_id_similar"]
         scores += item_similar_items["score"]
     # сортируем похожие объекты по scores в убывающем порядке
     # для старта это приемлемый подход
@@ -98,7 +100,6 @@ async def recommendations_online(user_id: int, k: int = 5):
     recs = recs[: k]
 
     return {"recs": recs}
-
 
 
 @app.post("/recommendations")

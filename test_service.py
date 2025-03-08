@@ -1,9 +1,10 @@
 import requests
 import logging
 import pandas as pd
+import configurations
 
-recommendations_url = "http://127.0.0.1:8000"
-events_store_url = "http://127.0.0.1:8020"
+recommendations_url = configurations.recommendations_url
+events_store_url = configurations.events_store_url
 
 headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
@@ -35,8 +36,10 @@ def fill_id(row, type):
     return int(row['id']) if row['type'] == type else None
 catalog_names['track_id'] = catalog_names.apply(lambda row: fill_id(row, 'track'), axis=1)
 
+
 logging.basicConfig(level=logging.INFO, filename="test_service.log",filemode="w")
 
+logging.info('Рекомендации из топа треков:')
 logging.info(recs_top[0])
 recs_top_text = ""
 for i in recs_top[0]:
@@ -44,6 +47,8 @@ for i in recs_top[0]:
     recs_top_text += track + ', '
 logging.info(recs_top_text)
 
+
+logging.info('Офлайн рекомендации:')
 logging.info(recs_offline[0])
 recs_offline_text = ""
 for i in recs_offline[0]:
@@ -51,6 +56,8 @@ for i in recs_offline[0]:
     recs_offline_text += track + ', '
 logging.info(recs_offline_text)
 
+
+logging.info('Комбинация онлайн и офлайн рекомендаций:')
 logging.info(recs_blended)
 recs_blended_text = ""
 for i in recs_blended:
