@@ -24,7 +24,7 @@ wget https://storage.yandexcloud.net/mle-data/ym/interactions.parquet
 
 ### Структура проекта:
 
-- configurations.py - файл с портами для сервисов
+- configurations.py - файл с адресами сервисов
 
 - events_service.py - сервис сохраняющий взаимодействия пользователей с треками
 
